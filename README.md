@@ -222,6 +222,20 @@ curl "http://localhost:8080/api/events/history?channel=history-channel&afterId=<
 - `app` waits for `db` health before startup (`depends_on` condition).
 - All services include health checks.
 
+## Test Evidence
+
+Run the full contract verification (endpoints, SSE format, filtering, replay, heartbeat):
+
+```bash
+npm run contract:test
+```
+
+Expected final output line:
+
+```text
+All contract checks passed.
+```
+
 ## Submission Artifacts
 
 Repository contains all required files:

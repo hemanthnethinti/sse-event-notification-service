@@ -45,7 +45,12 @@ class RedisService {
 
   async close() {
     if (this.subscriptionHandler && this.subscriber.isOpen) {
-      await this.subscriber.unsubscribe(this.channel, this.subscriptionHandler);
+      try {
+        // redis v4 unsubscribe accepts channel names; listener removal is handled internally.
+        await this.subscriber.unsubscribe(this.channel);
+      } catch (err) {
+        // best-effort unsubscribe
+      }
       this.subscriptionHandler = null;
     }
 

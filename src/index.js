@@ -18,6 +18,14 @@ const eventService = new EventService({ db, sseService, redisService, instanceId
 
 app.use(express.json({ limit: "1mb" }));
 
+app.use((error, _req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+    return res.status(400).json({ error: "Malformed JSON body" });
+  }
+
+  return next(error);
+});
+
 app.get("/health", async (_req, res, next) => {
   try {
     const response = await eventService.healthCheck();

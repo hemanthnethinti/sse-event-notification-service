@@ -19,9 +19,17 @@ class SseService {
     const data = JSON.stringify(event.payload);
 
     try {
-      res.write(`id: ${eventId}\n`);
-      res.write(`event: ${eventType}\n`);
-      res.write(`data: ${data}\n\n`);
+      const ok1 = res.write(`id: ${eventId}\n`);
+      const ok2 = res.write(`event: ${eventType}\n`);
+      const ok3 = res.write(`data: ${data}\n\n`);
+
+      if (res.writableEnded || res.writableDestroyed) {
+        return false;
+      }
+
+      // If any write returned false, the internal buffer is full. Consider client still connected,
+      // but return true to indicate the write was performed. The heartbeat monitor will detect
+      // eventual failures via res state.
       return true;
     } catch (_error) {
       return false;
@@ -30,8 +38,11 @@ class SseService {
 
   writeHeartbeat(res) {
     try {
-      res.write(": heartbeat\n\n");
-      return true;
+      const ok = res.write(": heartbeat\n\n");
+      if (res.writableEnded || res.writableDestroyed) {
+        return false;
+      }
+      return ok !== false;
     } catch (_error) {
       return false;
     }
@@ -91,6 +102,15 @@ class SseService {
     }
 
     this.clients.delete(clientId);
+
+    try {
+      // Attempt to gracefully end the response stream if still writable.
+      if (client.res && !client.res.writableEnded && !client.res.writableDestroyed) {
+        client.res.end();
+      }
+    } catch (err) {
+      // ignore cleanup errors
+    }
   }
 
   removeChannelFromUserConnections(userId, channel) {

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js"
+    ,"smoke": "node scripts/smoke-test.js"
+    ,"contract:test": "node scripts/contract-test.js"
   },
   "keywords": [
     "sse",
