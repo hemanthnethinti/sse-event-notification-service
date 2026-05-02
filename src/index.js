@@ -16,14 +16,16 @@ const instanceId = process.env.INSTANCE_ID || `${process.pid}`;
 const redisService = new RedisService({ redisUrl, channel: redisChannel });
 const eventService = new EventService({ db, sseService, redisService, instanceId });
 
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({
+  strict: true,
+  limit: "1mb"
+}));
 
-app.use((error, _req, res, next) => {
-  if (error instanceof SyntaxError && error.status === 400 && "body" in error) {
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({ error: "Malformed JSON body" });
   }
-
-  return next(error);
+  next();
 });
 
 app.get("/health", async (_req, res, next) => {
